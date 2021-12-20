@@ -1,0 +1,21 @@
+<div *ngIf="bar" class="chart-tooltip">
+  <div>
+    <span class="chart-tooltip-title">Onboarding Status: </span>
+    <span class="chart-tooltip-value">{{ status }}</span>
+  </div>
+  <div>
+    <span class="chart-tooltip-title">% Total: </span>
+    <span class="chart-tooltip-value">{{bar.percentage}}%</span>
+  </div>
+  <div>
+    <span class="chart-tooltip-title">Client Count: </span>
+    <span class="chart-tooltip-value">{{ bar.value }}</span>
+  </div>
+  <div>
+    <span class="chart-tooltip-title">Total Clients: </span>
+    <span class="chart-tooltip-value">{{ bar.total }}</span>
+  </div>
+</div>
+
+
+

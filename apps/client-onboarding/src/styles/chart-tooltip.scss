@@ -1,0 +1,26 @@
+.chart-tooltip {
+  font-family:'Arial';
+  font-size:12px;
+  padding: 12px;
+  overflow: hidden;
+  max-width: 740px;
+  background: #fff;
+  border: 1px solid #d4d4d4;
+  border-radius: 1px;
+  box-shadow: 1px 2px 1px 0 rgba(0, 0, 0, .22);
+  text-align: left;
+}
+
+.chart-tooltip-title {
+  color:#787878;
+  font-weight:normal;
+  font-style:normal;
+  text-decoration:none;
+}
+
+.chart-tooltip-value {
+  color:#333333;
+  font-weight:bold;
+  font-style:normal;
+  text-decoration:none;
+}

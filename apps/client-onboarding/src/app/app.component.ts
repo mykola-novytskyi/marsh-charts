@@ -1,10 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  CLIENT_STATUS_KEYS,
-  ClientStatus,
-  ClientStatusTempData
-} from '../../../../libs/bar-chart/src/lib/enums/client-status.enum';
-import { CLIENT_STATUS_CONFIG } from '../../../../libs/bar-chart/src/lib/constants/client-status.config';
+import { CLIENT_STATUS_KEYS, ClientStatus, ClientStatusTempData } from './enums/client-status.enum';
+import { CLIENT_STATUS_CONFIG } from './constants/client-status.config';
 import { BehaviorSubject } from 'rxjs';
 
 @Component({
@@ -14,18 +10,22 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class AppComponent implements OnInit {
   barChartConfig$ = new BehaviorSubject<any>({});
+  donutChartConfig$ = new BehaviorSubject<any>({});
   private selectedClientStatus: ClientStatus | null = null;
 
   ngOnInit() {
-    this.makeBarConfig();
+    this.makeBarChartConfig();
+    this.makeDonutChartConfig();
   }
 
-  onBarClick(clientStatus: string | number) {
-    this.selectedClientStatus = clientStatus as unknown as ClientStatus;
-    this.makeBarConfig();
+  onChooseStatus(clientStatus: string | number) {
+    const status = this.selectedClientStatus === clientStatus ? null : clientStatus;
+    this.selectedClientStatus = status as unknown as ClientStatus;
+    this.makeBarChartConfig();
+    this.makeDonutChartConfig();
   }
 
-  private makeBarConfig(): void {
+  private makeBarChartConfig(): void {
     this.barChartConfig$.next({
       labels: CLIENT_STATUS_KEYS.map(key => CLIENT_STATUS_CONFIG[key].name),
       yAxisName: '% of Clients',
@@ -42,6 +42,20 @@ export class AppComponent implements OnInit {
           })))
         }
       ]
+    });
+  }
+
+  private makeDonutChartConfig(): void {
+    this.donutChartConfig$.next({
+      totalTitle: 'Total Clients',
+      isPieChart: !!this.selectedClientStatus,
+      data: CLIENT_STATUS_KEYS.map(((id: ClientStatus, index) => ({
+        value: ClientStatusTempData[index],
+        color: CLIENT_STATUS_CONFIG[id].color,
+        id,
+        opacity: !this.selectedClientStatus ? 1 : this.selectedClientStatus === id ? 1 : .3,
+        border: !this.selectedClientStatus ? '' : this.selectedClientStatus === id ? '#333' : '',
+      })))
     });
   }
 }

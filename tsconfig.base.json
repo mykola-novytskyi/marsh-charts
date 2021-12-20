@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@client-onboarding/api-interfaces": ["libs/api-interfaces/src/index.ts"],
-      "@client-onboarding/bar-chart": ["libs/bar-chart/src/index.ts"]
+      "@client-onboarding/bar-chart": ["libs/bar-chart/src/index.ts"],
+      "@client-onboarding/donut-chart": ["libs/donut-chart/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

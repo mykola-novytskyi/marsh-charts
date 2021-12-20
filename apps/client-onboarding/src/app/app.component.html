@@ -1,1 +1,14 @@
-<bar-chart [chartConfig]="barChartConfig$ | async" (barClick)="onBarClick($event)"></bar-chart>
+<bar-chart [chartConfig]="barChartConfig$ | async" (barClick)="onChooseStatus($event)">
+  <ng-template #customTooltip let-bar$="bar$">
+    <bar-tooltip [bar]="bar$ | async"></bar-tooltip>
+  </ng-template>
+
+</bar-chart>
+
+<app-donut-chart
+  [donutChartConfig]="donutChartConfig$ | async"
+  (sectionClick)='onChooseStatus($event)'>
+  <ng-template #customTooltip let-donut$="donut$">
+    <donut-tooltip [donut]="donut$ | async"></donut-tooltip>
+  </ng-template>
+</app-donut-chart>

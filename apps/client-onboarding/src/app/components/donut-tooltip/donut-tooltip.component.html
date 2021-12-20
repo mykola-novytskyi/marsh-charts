@@ -1,0 +1,17 @@
+<div *ngIf="donut" class="chart-tooltip">
+  <div>
+    <span class="chart-tooltip-title">Status: </span>
+    <span class="chart-tooltip-value">{{ status }}</span>
+  </div>
+  <div>
+    <span class="chart-tooltip-title">% Total: </span>
+    <span class="chart-tooltip-value">{{donut.percentage}}%</span>
+  </div>
+  <div>
+    <span class="chart-tooltip-title">{{ status }} Clients: </span>
+    <span class="chart-tooltip-value">{{ donut.value }}</span>
+  </div>
+</div>
+
+
+

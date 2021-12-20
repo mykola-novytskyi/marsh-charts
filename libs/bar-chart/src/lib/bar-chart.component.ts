@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  ContentChild,
   ElementRef,
   EventEmitter,
   Input,
@@ -9,7 +10,9 @@ import {
   OnDestroy,
   OnInit,
   Output,
-  SimpleChanges
+  SimpleChanges,
+  TemplateRef,
+  ViewChild
 } from '@angular/core';
 import { BehaviorSubject, fromEvent, Subject, takeUntil } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -21,20 +24,30 @@ import { Series } from './interfaces/series.interface';
 @Component({
   selector: 'bar-chart',
   template: `
-    <bar-tooltip [bar]="hoveredBar$ | async"></bar-tooltip>`,
+    <div class="bar-tooltip" #tooltip>
+      <ng-container *ngTemplateOutlet="customTooltip; context: {bar$: hoveredBar$}"></ng-container>
+    </div>
+  `,
   styles: [`
     :host {
       display: block;
-    }`],
+    }
+
+    .bar-tooltip {
+      position: absolute;
+    }
+  `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
   @Input() chartConfig: any; // TODO add additional input for data
 
   @Output() barClick = new EventEmitter<number | string>();
+  @ContentChild('customTooltip') customTooltip: TemplateRef<unknown> | null  = null;
+  @ViewChild('tooltip') tooltipRef!: ElementRef<HTMLElement>;
 
   hoveredBar$ = new BehaviorSubject<BarTooltip | null>(null);
-  // configurations
+
   defaultOptions = {
     yAxisName: '',
     width: 1800,
@@ -96,6 +109,7 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
   ngAfterViewInit() {
     this.chartContainer = this.elementRef.nativeElement;
     this.populate();
+    this.tooltip = d3.select(this.tooltipRef.nativeElement);
   }
 
   /**
@@ -155,7 +169,7 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
             color: s.data[i].color,
             id: s.data[i].id,
             opacity: s.data[i].opacity,
-            border: s.data[i].border,
+            border: s.data[i].border
           });
 
           this.chartConfig.series[index].total += value;
@@ -211,7 +225,6 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
       this.axisXLayer = wrapper.append('g').classed('x-axis', true);
       this.axisYLayer = wrapper.append('g').classed('y-axis', true);
       this.countLayer = wrapper.append('g').classed('counts', true);
-      this.tooltip = d3.select(this.chartContainer).select('bar-tooltip');
 
       svg.append('text')
         .attr('class', 'y label')
@@ -298,7 +311,6 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
     const height = this.columnLayerHeight;
     const xScale = this.xScale;
     const xInScale = this.xInScale;
-    const tooltip = this.tooltip;
     const groupColumns = this.columnLayer.selectAll('.group-column').data(this.columnsData);
     const t = this.transition;
 
@@ -332,7 +344,7 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
         });
       })
       .on('mouseout', () => this.hoveredBar$.next(null))
-      .on('mousemove', (event: MouseEvent) => tooltip.style('left', event.x + 20 + 'px').style('top', event.y + 25 + 'px'))
+      .on('mousemove', (event: MouseEvent) => this.tooltip.style('left', event.x + 20 + 'px').style('top', event.y + 25 + 'px'))
       .on('click', (event: MouseEvent, bar: Bar) => this.barClick.emit(bar.id));
 
     columns

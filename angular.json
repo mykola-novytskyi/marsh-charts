@@ -99,6 +99,13 @@
       "root": "apps/client-onboarding",
       "sourceRoot": "apps/client-onboarding/src",
       "prefix": "",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss",
+          "skipTests": true,
+          "changeDetection": "OnPush"
+        }
+      },
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
@@ -218,6 +225,32 @@
       },
       "tags": [],
       "implicitDependencies": ["client-onboarding"]
+    },
+    "donut-chart": {
+      "projectType": "library",
+      "root": "libs/donut-chart",
+      "sourceRoot": "libs/donut-chart/src",
+      "prefix": "client-onboarding",
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/donut-chart"],
+          "options": {
+            "jestConfig": "libs/donut-chart/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/donut-chart/src/**/*.ts",
+              "libs/donut-chart/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
     }
   }
 }

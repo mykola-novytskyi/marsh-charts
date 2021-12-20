@@ -1,6 +1,5 @@
-export interface BarTooltip {
+export interface DonutTooltip {
   id: string | number;
   value: number;
   percentage: number;
-  total: number;
 }
