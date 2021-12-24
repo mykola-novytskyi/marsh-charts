@@ -31,6 +31,7 @@ export class AppComponent implements OnInit {
       yAxisName: '% of Clients',
       width: Infinity,
       margin: { top: 24, right: 0, bottom: 24, left: 0 },
+      isBarSelected: !!this.selectedClientStatus,
       series: [
         {
           data: CLIENT_STATUS_KEYS.map(((id: ClientStatus, index) => ({

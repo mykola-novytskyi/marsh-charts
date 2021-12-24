@@ -63,6 +63,7 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
     gapBetweenLegend: 20,
     gapBetweenColumnAndCount: 5,
     tickYPercentage: 10,
+    isBarSelected: false,
     colorCountRect: '#f2f2f2' //TODO
   };
   options: any;
@@ -313,6 +314,7 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
     const xInScale = this.xInScale;
     const groupColumns = this.columnLayer.selectAll('.group-column').data(this.columnsData);
     const t = this.transition;
+    const self = this;
 
     const newGroupColumns = groupColumns.enter().append('g').classed('group-column', true);
 
@@ -328,22 +330,29 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
       .attr('cursor', 'pointer')
       .classed('column', true)
       .attr('transform', (d: Bar) => `translate(${xInScale(`${d.ser}`)}, ${height})`)
-      .attr('fill', (d: Bar) => d.color);
 
     columns
       .merge(newColumns)
       .style('opacity', (bar: Bar) => (bar.opacity))
       .style('stroke', (bar: Bar) => bar.border)
       .style('stroke-width', (bar: Bar) => bar.border ? 2 : 0)
-      .on('mouseover', (event: MouseEvent, bar: Bar) => {
-        this.hoveredBar$.next({
+      .style('fill', (d: Bar) => d.color)
+      .on('mouseover', function(this: SVGRectElement, event: MouseEvent, bar: Bar) {
+        const thisRect = d3.select(this);
+        if (!self.options.isBarSelected) {
+          thisRect.style('fill', () => d3.rgb(thisRect.style('fill')).darker() as any);
+        }
+        self.hoveredBar$.next({
           id: bar.id,
           value: bar.value,
-          total: this.getTotalBySeries(bar.ser as number),
-          percentage: +this.getPercentage(bar).toFixed(1)
+          total: self.getTotalBySeries(bar.ser as number),
+          percentage: +self.getPercentage(bar).toFixed(1)
         });
       })
-      .on('mouseout', () => this.hoveredBar$.next(null))
+      .on('mouseout', function(this: SVGRectElement, event: MouseEvent, bar: Bar) {
+        d3.select(this).style('fill', bar.color);
+        self.hoveredBar$.next(null)
+      })
       .on('mousemove', (event: MouseEvent) => this.tooltip.style('left', event.x + 20 + 'px').style('top', event.y + 25 + 'px'))
       .on('click', (event: MouseEvent, bar: Bar) => this.barClick.emit(bar.id));
 
