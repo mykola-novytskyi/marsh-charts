@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { Message } from '@client-onboarding/api-interfaces';
+import { Message } from '@marsh-charts/api-interfaces';
 
 import { AppService } from './app.service';
 

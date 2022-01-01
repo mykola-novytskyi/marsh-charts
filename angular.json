@@ -73,6 +73,13 @@
       "root": "libs/bar-chart",
       "sourceRoot": "libs/bar-chart/src",
       "prefix": "",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss",
+          "skipTests": true,
+          "changeDetection": "OnPush"
+        }
+      },
       "architect": {
         "test": {
           "builder": "@nrwl/jest:jest",
@@ -94,10 +101,10 @@
       },
       "tags": []
     },
-    "client-onboarding": {
+    "marsh-charts": {
       "projectType": "application",
-      "root": "apps/client-onboarding",
-      "sourceRoot": "apps/client-onboarding/src",
+      "root": "apps/marsh-charts",
+      "sourceRoot": "apps/marsh-charts/src",
       "prefix": "",
       "schematics": {
         "@nrwl/angular:component": {
@@ -111,17 +118,17 @@
           "builder": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"],
           "options": {
-            "outputPath": "dist/apps/client-onboarding",
-            "index": "apps/client-onboarding/src/index.html",
-            "main": "apps/client-onboarding/src/main.ts",
-            "polyfills": "apps/client-onboarding/src/polyfills.ts",
-            "tsConfig": "apps/client-onboarding/tsconfig.app.json",
+            "outputPath": "dist/apps/marsh-charts",
+            "index": "apps/marsh-charts/src/index.html",
+            "main": "apps/marsh-charts/src/main.ts",
+            "polyfills": "apps/marsh-charts/src/polyfills.ts",
+            "tsConfig": "apps/marsh-charts/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "apps/client-onboarding/src/favicon.ico",
-              "apps/client-onboarding/src/assets"
+              "apps/marsh-charts/src/favicon.ico",
+              "apps/marsh-charts/src/assets"
             ],
-            "styles": ["apps/client-onboarding/src/styles.scss"],
+            "styles": ["apps/marsh-charts/src/styles.scss"],
             "scripts": []
           },
           "configurations": {
@@ -140,8 +147,8 @@
               ],
               "fileReplacements": [
                 {
-                  "replace": "apps/client-onboarding/src/environments/environment.ts",
-                  "with": "apps/client-onboarding/src/environments/environment.prod.ts"
+                  "replace": "apps/marsh-charts/src/environments/environment.ts",
+                  "with": "apps/marsh-charts/src/environments/environment.prod.ts"
                 }
               ],
               "outputHashing": "all"
@@ -161,57 +168,57 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "client-onboarding:build:production"
+              "browserTarget": "marsh-charts:build:production"
             },
             "development": {
-              "browserTarget": "client-onboarding:build:development"
+              "browserTarget": "marsh-charts:build:development"
             }
           },
           "defaultConfiguration": "development",
           "options": {
-            "proxyConfig": "apps/client-onboarding/proxy.conf.json"
+            "proxyConfig": "apps/marsh-charts/proxy.conf.json"
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "client-onboarding:build"
+            "browserTarget": "marsh-charts:build"
           }
         },
         "lint": {
           "builder": "@nrwl/linter:eslint",
           "options": {
             "lintFilePatterns": [
-              "apps/client-onboarding/src/**/*.ts",
-              "apps/client-onboarding/src/**/*.html"
+              "apps/marsh-charts/src/**/*.ts",
+              "apps/marsh-charts/src/**/*.html"
             ]
           }
         },
         "test": {
           "builder": "@nrwl/jest:jest",
-          "outputs": ["coverage/apps/client-onboarding"],
+          "outputs": ["coverage/apps/marsh-charts"],
           "options": {
-            "jestConfig": "apps/client-onboarding/jest.config.js",
+            "jestConfig": "apps/marsh-charts/jest.config.js",
             "passWithNoTests": true
           }
         }
       },
       "tags": []
     },
-    "client-onboarding-e2e": {
-      "root": "apps/client-onboarding-e2e",
-      "sourceRoot": "apps/client-onboarding-e2e/src",
+    "marsh-charts-e2e": {
+      "root": "apps/marsh-charts-e2e",
+      "sourceRoot": "apps/marsh-charts-e2e/src",
       "projectType": "application",
       "architect": {
         "e2e": {
           "builder": "@nrwl/cypress:cypress",
           "options": {
-            "cypressConfig": "apps/client-onboarding-e2e/cypress.json",
-            "devServerTarget": "client-onboarding:serve:development"
+            "cypressConfig": "apps/marsh-charts-e2e/cypress.json",
+            "devServerTarget": "marsh-charts:serve:development"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "client-onboarding:serve:production"
+              "devServerTarget": "marsh-charts:serve:production"
             }
           }
         },
@@ -219,18 +226,25 @@
           "builder": "@nrwl/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": ["apps/client-onboarding-e2e/**/*.{js,ts}"]
+            "lintFilePatterns": ["apps/marsh-charts-e2e/**/*.{js,ts}"]
           }
         }
       },
       "tags": [],
-      "implicitDependencies": ["client-onboarding"]
+      "implicitDependencies": ["marsh-charts"]
     },
     "donut-chart": {
       "projectType": "library",
       "root": "libs/donut-chart",
       "sourceRoot": "libs/donut-chart/src",
-      "prefix": "client-onboarding",
+      "prefix": "",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss",
+          "skipTests": true,
+          "changeDetection": "OnPush"
+        }
+      },
       "architect": {
         "test": {
           "builder": "@nrwl/jest:jest",
@@ -246,6 +260,39 @@
             "lintFilePatterns": [
               "libs/donut-chart/src/**/*.ts",
               "libs/donut-chart/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
+    "map-chart": {
+      "projectType": "library",
+      "root": "libs/map-chart",
+      "sourceRoot": "libs/map-chart/src",
+      "prefix": "",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss",
+          "skipTests": true,
+          "changeDetection": "OnPush"
+        }
+      },
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/map-chart"],
+          "options": {
+            "jestConfig": "libs/map-chart/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/map-chart/src/**/*.ts",
+              "libs/map-chart/src/**/*.html"
             ]
           }
         }

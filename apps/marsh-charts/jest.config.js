@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'client-onboarding',
+  displayName: 'marsh-charts',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
@@ -8,7 +8,7 @@ module.exports = {
       stringifyContentPathRegex: '\\.(html|svg)$',
     },
   },
-  coverageDirectory: '../../coverage/apps/client-onboarding',
+  coverageDirectory: '../../coverage/apps/marsh-charts',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
   },

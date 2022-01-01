@@ -1,0 +1,45 @@
+<div class="country-tooltip" #tooltip>
+  <ng-container *ngTemplateOutlet="customTooltip; context: {country$: hoveredCountry$}"></ng-container>
+</div>
+<svg #svg (mousedown)="onMouseDown($event)"
+     (mouseleave)="onMouseleave()"
+     (mousemove)="omMouseMove($event)"
+     (mouseup)="onMouseup($event)"
+     (wheel)="omMousewheel($event)"
+     height="480"
+     width="1120"></svg>
+
+<svg class="controls">
+  <g transform="translate(10,10)">
+    <g transform="translate(0,47)">
+      <!--+-->
+      <g cursor="pointer" (click)="onZoomIn()">
+        <circle cx="0" cy="0" fill="#FFFFFF" fill-opacity="1" r="15.5" stroke="#000000" stroke-opacity="0.1"
+                stroke-width="1" transform="translate(16,16)"></circle>
+        <g opacity="1" style="pointer-events: none;" transform="translate(16,16)">
+          <path cs="100,100" d="M-6.5,0.5 L7.5,0.5" fill="none" fill-opacity="0" stroke="#000000" stroke-opacity="1"
+                stroke-width="1"></path>
+          <path cs="100,100" d="M0.5,-6.5 L0.5,7.5" fill="none" fill-opacity="0" stroke="#000000" stroke-opacity="1"
+                stroke-width="1"></path>
+        </g>
+      </g>
+      <!-- - -->
+      <g cursor="pointer" transform="translate(0,36)" (click)="onZoomOut()">
+        <circle cx="0" cy="0" fill="#FFFFFF" fill-opacity="1" r="15.5" stroke="#000000" stroke-opacity="0.1"
+                stroke-width="1" transform="translate(16,16)"></circle>
+        <path cs="100,100" d="M-6.5,0.5 L7.5,0.5" fill="none" fill-opacity="0" opacity="1" stroke="#000000"
+              stroke-opacity="1" stroke-width="1" style="pointer-events: none;"
+              transform="translate(16,16)"></path>
+      </g>
+    </g>
+    <!--    home-->
+    <g (click)="onHome()" cursor="pointer">
+      <circle cx="0" cy="0" fill="#FFFFFF" fill-opacity="1" r="15.5" stroke="#000000" stroke-opacity="0.1"
+              stroke-width="1" transform="translate(16,16)"></circle>
+      <path cs="100,100"
+            d="M-6.5,0.5 L0.5,-6.5 L7.5,0.5 L6.5,0.5 L6.5,6.5 L2.5,6.5 L2.5,2.5 L-1.5,2.5 L-1.5,6.5 L-5.5,6.5 L-5.5,0.5 Z"
+            fill="#000000" fill-opacity="1" opacity="1" stroke="#000000" stroke-opacity="1"
+            stroke-width="1" style="pointer-events: none;" transform="translate(16,16)"></path>
+    </g>
+  </g>
+</svg>

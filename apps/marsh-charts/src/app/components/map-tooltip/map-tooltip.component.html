@@ -1,0 +1,17 @@
+<div *ngIf="country" class="chart-tooltip">
+  <div>
+    <span class="chart-tooltip-title">Country: </span>
+    <span class="chart-tooltip-value">{{ country.country }}</span>
+  </div>
+  <div>
+    <span class="chart-tooltip-title">Logins: </span>
+    <span class="chart-tooltip-value">{{ country.value }}</span>
+  </div>
+  <div>
+    <span class="chart-tooltip-title">Logins % of Total: </span>
+    <span class="chart-tooltip-value">{{(country.value * 100 / country.total).toFixed(1)}}%</span>
+  </div>
+</div>
+
+
+

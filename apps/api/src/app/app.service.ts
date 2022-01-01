@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Message } from '@client-onboarding/api-interfaces';
+import { Message } from '@marsh-charts/api-interfaces';
 
 @Injectable()
 export class AppService {

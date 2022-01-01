@@ -2,15 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CLIENT_STATUS_KEYS, ClientStatus, ClientStatusTempData } from './enums/client-status.enum';
 import { CLIENT_STATUS_CONFIG } from './constants/client-status.config';
 import { BehaviorSubject } from 'rxjs';
+import { MapCountry } from '@marsh-charts/map-chart';
+import { fakeLoginCountries } from './fake-data/login-contries.const';
 
 @Component({
-  selector: 'client-onboarding-root',
+  selector: 'marsh-charts-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   barChartConfig$ = new BehaviorSubject<any>({});
   donutChartConfig$ = new BehaviorSubject<any>({});
+  countries$ = new BehaviorSubject<MapCountry[]>(fakeLoginCountries);
+
   private selectedClientStatus: ClientStatus | null = null;
 
   ngOnInit() {

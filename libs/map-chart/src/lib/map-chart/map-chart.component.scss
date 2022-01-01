@@ -1,0 +1,15 @@
+.country-tooltip {
+  position: absolute;
+}
+
+.controls {
+  width: 50px;
+  height: 130px;
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  circle:hover {
+    fill: #dadada;
+  }
+}

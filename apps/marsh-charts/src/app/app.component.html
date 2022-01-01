@@ -12,3 +12,10 @@
     <donut-tooltip [donut]="donut$ | async"></donut-tooltip>
   </ng-template>
 </app-donut-chart>
+
+<map-chart [countries]="(countries$ | async)!">
+  <ng-template #customTooltip let-country$="country$">
+    <map-tooltip [country]="country$ | async"></map-tooltip>
+  </ng-template>
+</map-chart>
+

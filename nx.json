@@ -1,5 +1,5 @@
 {
-  "npmScope": "client-onboarding",
+  "npmScope": "marsh-charts",
   "affected": {
     "defaultBase": "main"
   },
@@ -49,8 +49,10 @@
       "unitTestRunner": "jest"
     },
     "@nrwl/angular:component": {
-      "style": "scss"
+      "style": "scss",
+      "skipTests": true,
+      "changeDetection": "OnPush"
     }
   },
-  "defaultProject": "client-onboarding"
+  "defaultProject": "marsh-charts"
 }

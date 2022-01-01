@@ -1,6 +1,6 @@
 import { getGreeting } from '../support/app.po';
 
-describe('client-onboarding', () => {
+describe('marsh-charts', () => {
   beforeEach(() => cy.visit('/'));
 
   it('should display welcome message', () => {
@@ -8,6 +8,6 @@ describe('client-onboarding', () => {
     cy.login('my-email@something.com', 'myPassword');
 
     // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains('Welcome to client-onboarding!');
+    getGreeting().contains('Welcome to marsh-charts!');
   });
 });
