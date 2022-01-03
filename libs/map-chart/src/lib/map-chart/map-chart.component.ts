@@ -3,7 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ContentChild,
-  ElementRef,
+  ElementRef, Inject,
   Input,
   OnChanges,
   OnInit,
@@ -17,12 +17,13 @@ import worldMap from '../world-map';
 import { MapConfig } from '../interfaces/map-config.interface';
 import { BehaviorSubject } from 'rxjs';
 import { MapTooltip } from '../interfaces/map-tooltip.interface';
-import { MapCountry } from '@marsh-charts/map-chart';
+import { MapCountry } from '../interfaces/map-country.interface';
 import { GeoData } from '../interfaces/geo-data.interface';
 import { GeoProjection } from 'd3-geo';
 import { Selection } from 'd3-selection';
 import { GeoJsonProperties } from 'geojson';
 import { mapIdName } from '../map-id-name.const'
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'map-chart',
@@ -35,7 +36,7 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() countries: MapCountry[] = [];
 
   @ViewChild('tooltip') tooltipRef!: ElementRef<HTMLElement>;
-  @ViewChild('svg') private svg!: ElementRef;
+  @ViewChild('svg') private svgRef!: ElementRef;
   @ContentChild('customTooltip') customTooltip: TemplateRef<unknown> | null = null;
 
   hoveredCountry$ = new BehaviorSubject<MapTooltip | null>(null);
@@ -45,19 +46,24 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
   };
 
   private options!: MapConfig;
-  private MIN_SCALE = 1;
-  private MAX_SCALE = 20;
-  private viewBox = { x: 0, y: 0, width: 500, height: 500 };
-  private startPoint = { x: 0, y: 0 };
-  private endPoint = { x: 0, y: 0 };
-  private isPanning = false;
-  private scale = this.MIN_SCALE;
   private tooltip: any; // Todo
   private countryDictionary: {[key: string] : MapCountry} = {};
   private initMap = false;
+  private mapGroup!: Selection<SVGGElement, unknown, null, undefined>;
   private bubbleGroup!: Selection<SVGGElement, unknown, null, undefined>;
+  private svg!: Selection<Element, unknown, any, any>;
   private projection!: GeoProjection;
   private totalValue = 0;
+  private window: Window;
+  private zoom!: d3.ZoomBehavior<Element, unknown>;
+
+  constructor(@Inject(DOCUMENT) private document: Document) {
+    this.window = this.document.defaultView!;
+  }
+
+  get svgGroups(): Selection<SVGGElement, unknown, null, undefined>[] {
+    return [this.bubbleGroup, this.mapGroup];
+  }
 
   ngOnInit() {
     this.options = {
@@ -81,10 +87,15 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    console.log('ngAfterViewInit');
-    const svg = d3.select(this.svg.nativeElement)
+    this.zoom = d3.zoom()
+      .scaleExtent([1, 15])
+      .translateExtent([[0, 0], [this.options.width, this.options.height]])
+      .on('zoom', this.handleZoom);
+
+    this.svg = d3.select(this.svgRef.nativeElement)
       .attr('width', this.options.width)
-      .attr('height', this.options.height);
+      .attr('height', this.options.height)
+      .call(this.zoom);
 
     this.projection = d3.geoMercator()
       .center([0, 40])                // GPS of location to zoom on
@@ -92,9 +103,10 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
       .translate([this.options.width * 0.5, this.options.height * 0.5]);
 
     this.tooltip = d3.select(this.tooltipRef.nativeElement);
+    this.mapGroup = this.svg.append('g');
+    this.bubbleGroup = this.svg.append('g');
 
-    svg.append('g')
-      .selectAll('path')
+    this.mapGroup.selectAll('path')
       .data(worldMap.features)
       .join('path')
       // @ts-ignore
@@ -117,99 +129,23 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
       .on('mouseout', () => this.mouseout())
       .on('mousemove', (event: MouseEvent) => this.mousemove(event));
 
-    this.bubbleGroup = svg.append('g');
     this.drawCountries();
-    this.setViewBox(0, 0, this.options.width, this.options.height);
-  }
-
-  omMousewheel(event: WheelEvent): void {
-    event.preventDefault();
-    console.log(event.deltaY);
-    const mx = event.offsetX;
-    const my = event.offsetY;
-    const dw = this.viewBox.width * Math.sign(event.deltaY) * 0.05;
-    const dh = this.viewBox.height * Math.sign(event.deltaY) * 0.05;
-    const dx = dw * mx / this.svg.nativeElement.clientWidth;
-    const dy = dh * my / this.svg.nativeElement.clientHeight;
-
-    let scale = this.svg.nativeElement.clientWidth / (this.viewBox.width - dw);
-
-    if (scale < this.MIN_SCALE) {
-      scale = this.MIN_SCALE;
-    } else if (scale > this.MAX_SCALE) {
-      scale = this.MAX_SCALE;
-    }
-    if (this.scale !== scale) {
-      this.setScale(scale);
-      this.setViewBox(this.viewBox.x + dx, this.viewBox.y + dy, this.viewBox.width - dw, this.viewBox.height - dh);
-    }
-  }
-
-  onMouseleave(): void {
-    this.changePanning(false);
-  }
-
-  onMouseup(event: MouseEvent) {
-    if (this.isPanning) {
-      this.endPoint = { x: event.x, y: event.y };
-      const dx = (this.startPoint.x - this.endPoint.x) / this.scale;
-      const dy = (this.startPoint.y - this.endPoint.y) / this.scale;
-      this.setViewBox(this.viewBox.x + dx, this.viewBox.y + dy, this.viewBox.width, this.viewBox.height);
-      this.changePanning(false);
-    }
-  }
-
-  omMouseMove(event: MouseEvent): void {
-    if (this.isPanning) {
-      this.endPoint = { x: event.x, y: event.y };
-      const dx = (this.startPoint.x - this.endPoint.x) / this.scale;
-      const dy = (this.startPoint.y - this.endPoint.y) / this.scale;
-
-      this.setViewBox(this.viewBox.x + dx, this.viewBox.y + dy, this.viewBox.width, this.viewBox.height, false);
-    }
-  }
-
-  onMouseDown(event: MouseEvent): void {
-    this.changePanning(true);
-    this.startPoint = { x: event.x, y: event.y };
   }
 
   onHome(): void {
-    this.setScale(this.MIN_SCALE);
-    this.setViewBox(0, 0, this.svg.nativeElement.clientWidth, this.svg.nativeElement.clientHeight);
+    this.svg.transition().call(this.zoom.transform, d3.zoomIdentity.scale(1));
   }
 
   onZoomIn(): void {
-    const dw = this.viewBox.width * Math.sign(100) * 0.2;
-    const dh = this.viewBox.height * Math.sign(100) * 0.2;
-    this.setScale(this.svg.nativeElement.clientWidth / (this.viewBox.width - dw));
-    this.setViewBox(this.viewBox.x, this.viewBox.y, this.viewBox.width - dw, this.viewBox.height - dh);
-    console.log('onZoomIn');
+    this.svg.transition().call(this.zoom.scaleBy, 2);
   }
 
   onZoomOut(): void {
-    console.log('onZoomOut');
-  }
-
-  private setViewBox(x: number, y: number, width: number, height: number, changeViewBox = true) {
-    if (changeViewBox) {
-      this.viewBox = { x, y, width, height };
-    }
-
-    this.svg.nativeElement.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
-  }
-
-  private changePanning(isPanning: boolean): void {
-    this.isPanning = isPanning;
-  }
-
-  private setScale(scale: number): void {
-    this.scale = scale;
+    this.svg.transition().call(this.zoom.scaleBy, 0.5);
   }
 
   private drawCountries() {
-    console.log('drawCountries', this.countryDictionary);
-    const svg = d3.select(this.svg.nativeElement);
+    const svg = d3.select(this.svgRef.nativeElement);
     // Add a scale for bubble size
     const bubbleExtent = d3.extent(this.countries, d => d.value);
 
@@ -266,6 +202,12 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   private mousemove(event: MouseEvent): void {
-    this.tooltip.style('left', event.x + 5 + 'px').style('top', event.y + 10 + 'px');
+    this.tooltip
+      .style('left', event.x + 10 + this.window.scrollX + 'px')
+      .style('top', event.y + this.window.scrollY + 20 + 'px');
+  }
+
+  private handleZoom = (event: any): void => {
+    this.svgGroups.forEach(selection => selection.attr('transform', event.transform));
   }
 }

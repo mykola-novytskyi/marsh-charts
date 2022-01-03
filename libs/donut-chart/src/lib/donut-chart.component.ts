@@ -3,7 +3,7 @@ import {
   Component,
   ContentChild,
   ElementRef,
-  EventEmitter,
+  EventEmitter, Inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -22,6 +22,7 @@ import { DonutSection } from './interfaces/donut-section.interface';
 import { Donut } from './interfaces/donut.interface';
 import { DefaultArcObject } from 'd3';
 import { CustomPathElement } from './interfaces/custom-path-element.interface';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-donut-chart',
@@ -76,6 +77,11 @@ export class DonutChartComponent implements OnInit, OnChanges, OnDestroy, AfterV
 
   private unsubscribe = new Subject<void>();
 
+  private window: Window;
+
+  constructor(@Inject(DOCUMENT) private document: Document) {
+    this.window = this.document.defaultView!;
+  }
   /**
    * Redraw chart on window resize
    */
@@ -196,7 +202,10 @@ export class DonutChartComponent implements OnInit, OnChanges, OnDestroy, AfterV
         }
       })
       .on('click', (event: MouseEvent, d: any) => this.sectionClick.emit(d.data.id))
-      .on('mousemove', (event: MouseEvent) => this.tooltip.style('left', event.x + 20 + 'px').style('top', event.y + 25 + 'px'))
+      .on('mousemove', (event: MouseEvent) =>
+        this.tooltip
+          .style('left', event.x + 20 + this.window.scrollX + 'px')
+          .style('top', event.y + 25 + this.window.scrollY + 'px'))
       .attr('fill', (d: any) => d.data.color)
       .attr('stroke', (d: DonutSection) => d.data.border)
       .style('stroke-width', (d: DonutSection) => this.options.isPieChart && d.data.opacity ? '2px' : 0)

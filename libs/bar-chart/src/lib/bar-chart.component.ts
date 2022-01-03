@@ -4,7 +4,7 @@ import {
   Component,
   ContentChild,
   ElementRef,
-  EventEmitter,
+  EventEmitter, Inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -20,6 +20,7 @@ import * as d3 from 'd3';
 import { Bar } from './interfaces/bar.interface';
 import { BarTooltip } from './interfaces/bar-tooltip.interface';
 import { Series } from './interfaces/series.interface';
+import { DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'bar-chart',
@@ -85,8 +86,10 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
   private totalLabelHeight!: number; // get group height
   private unsubscribe = new Subject<void>();
   private marginLeft = 50;
+  private window: Window;
 
-  constructor(private elementRef: ElementRef) {
+  constructor(private elementRef: ElementRef, @Inject(DOCUMENT) private document: Document) {
+    this.window = this.document.defaultView!;
   }
 
   get groupsNumber() {
@@ -353,7 +356,10 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
         d3.select(this).style('fill', bar.color);
         self.hoveredBar$.next(null)
       })
-      .on('mousemove', (event: MouseEvent) => this.tooltip.style('left', event.x + 20 + 'px').style('top', event.y + 25 + 'px'))
+      .on('mousemove', (event: MouseEvent) =>
+        this.tooltip
+          .style('left', event.x + this.window.scrollX + 20 + 'px')
+          .style('top', event.y + this.window.scrollY + 25 + 'px'))
       .on('click', (event: MouseEvent, bar: Bar) => this.barClick.emit(bar.id));
 
     columns
