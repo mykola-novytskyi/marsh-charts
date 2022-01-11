@@ -9,10 +9,20 @@ import { BarTooltipComponent } from './components/bar-tooltip/bar-tooltip.compon
 import { DonutTooltipComponent } from './components/donut-tooltip/donut-tooltip.component';
 import { MapTooltipComponent } from './components/map-tooltip/map-tooltip.component';
 import { MapChartModule } from '@marsh-charts/map-chart';
+import {  MatCheckboxModule} from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
   declarations: [AppComponent, BarTooltipComponent, DonutTooltipComponent, MapTooltipComponent],
-  imports: [BrowserModule, HttpClientModule, BarChartModule, DonutChartModule, MapChartModule],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    BarChartModule,
+    DonutChartModule,
+    MapChartModule,
+    MatCheckboxModule,
+    MatButtonModule
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

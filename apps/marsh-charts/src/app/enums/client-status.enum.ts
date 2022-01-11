@@ -16,5 +16,12 @@ export enum ClientStatus {
 }
 
 export const CLIENT_STATUS_KEYS: ClientStatus[] = (Object.keys(ClientStatus) as unknown as ClientStatus[]).filter((key: ClientStatus) => (parseInt(key as unknown as string) >= 0));
-
-export const ClientStatusTempData = [89, 166, 141, 125, 30, 131, 72];
+export const ClientStatusTempData = {
+  [ClientStatus.Live]: 89,
+  [ClientStatus.Ready]: 166,
+  [ClientStatus.InProgress]: 141,
+  [ClientStatus.Provisioned]: 125,
+  [ClientStatus.Submitted]: 30,
+  [ClientStatus.Expected]: 131,
+  [ClientStatus.Deferred]: 72,
+}

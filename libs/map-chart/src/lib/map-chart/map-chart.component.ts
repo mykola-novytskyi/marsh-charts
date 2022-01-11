@@ -24,6 +24,8 @@ import { Selection } from 'd3-selection';
 import { GeoJsonProperties } from 'geojson';
 import { mapIdName } from '../map-id-name.const'
 import { DOCUMENT } from '@angular/common';
+import { ScalePower } from 'd3';
+import { D3ZoomEvent, ZoomTransform } from 'd3-zoom';
 
 @Component({
   selector: 'map-chart',
@@ -56,6 +58,9 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
   private totalValue = 0;
   private window: Window;
   private zoom!: d3.ZoomBehavior<Element, unknown>;
+  private bubbles!: Selection<SVGCircleElement, MapCountry, SVGGElement, undefined>;
+  private bubbleText!: Selection<SVGTextElement, MapCountry, SVGGElement, undefined>;
+  private bubbleSize!: ScalePower<number, number, never>;
 
   constructor(@Inject(DOCUMENT) private document: Document) {
     this.window = this.document.defaultView!;
@@ -74,6 +79,14 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.countries) {
+      // Add a scale for bubble size
+      const bubbleExtent = d3.extent(this.countries, d => d.value);
+
+      this.bubbleSize = d3.scaleSqrt()
+        // @ts-ignore
+        .domain(bubbleExtent)  // What's in the data
+        .range([8, 18]);  // Size in pixel
+
       this.countryDictionary = {};
       this.totalValue = 0;
       changes.countries.currentValue.forEach((country: MapCountry) => {
@@ -146,13 +159,6 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
 
   private drawCountries() {
     const svg = d3.select(this.svgRef.nativeElement);
-    // Add a scale for bubble size
-    const bubbleExtent = d3.extent(this.countries, d => d.value);
-
-    const size = d3.scaleSqrt()
-      // @ts-ignore
-      .domain(bubbleExtent)  // What's in the data
-      .range([8, 18]);  // Size in pixel
 
     svg.selectAll<SVGPathElement, GeoData>('path')
       .filter((country: GeoData) => !!this.countryDictionary[country.properties.id])
@@ -171,30 +177,31 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
     }
 
 
-    const bubbles = this.bubbleGroup.selectAll<SVGCircleElement, MapCountry>('circle')
+    this.bubbles = this.bubbleGroup.selectAll<SVGCircleElement, MapCountry>('circle')
       .data(this.countries)
       .join('circle')
       .attr('cx', (country: MapCountry) => this.projection([country.lon, country.lat])![0])
       .attr('cy', d => this.projection([d.lon, d.lat])![1])
-      .attr('r', d => size(d.value))
+      .attr('r', d => this.bubbleSize(d.value))
       .style('fill', '#717beb')
       .attr('stroke', '#3c47e6')
       .attr('stroke-width', 1);
 
 
-    const bubbleText = this.bubbleGroup.selectAll<SVGTextElement, MapCountry>('text')
+    this.bubbleText = this.bubbleGroup.selectAll<SVGTextElement, MapCountry>('text')
       .data(this.countries)
       .join('text')
       .attr('x', (country: MapCountry) => this.projection([country.lon, country.lat])![0])
-      .attr('y', d => this.projection([d.lon, d.lat])![1] + 5)
-      .attr('text-anchor', 'middle')
+      .attr('y', d => this.projection([d.lon, d.lat])![1])
+      .style('text-anchor', 'middle')
+      .style('alignment-baseline', 'middle')
       .style('font-size', '12px')
       .style('cursor', 'default')
       .text((country) => country.value);
 
-    bubbles.call(tooltipFunctionality);
+    this.bubbles.call(tooltipFunctionality);
     // @ts-ignore
-    bubbleText.call(tooltipFunctionality);
+    this.bubbleText.call(tooltipFunctionality);
   }
 
   private mouseout(): void {
@@ -207,7 +214,12 @@ export class MapChartComponent implements OnInit, OnChanges, AfterViewInit {
       .style('top', event.y + this.window.scrollY + 20 + 'px');
   }
 
-  private handleZoom = (event: any): void => {
+  private handleZoom = (event: D3ZoomEvent<Element,MapCountry>): void => {
+    this.bubbles
+      .attr('r', d => this.bubbleSize(d.value) / event.transform.k)
+      .attr('stroke-width', 1 / event.transform.k);
+    this.bubbleText.style('font-size', () => `${Math.round(12 / event.transform.k)}px`);
+    // @ts-ignore
     this.svgGroups.forEach(selection => selection.attr('transform', event.transform));
   }
 }

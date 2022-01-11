@@ -1,4 +1,12 @@
-<bar-chart [chartConfig]="barChartConfig$ | async" (barClick)="onChooseStatus($event)">
+<mat-checkbox *ngFor="let status of CLIENT_STATUS_KEYS"
+              (change)="onCheckboxChange($event.checked, status)"
+              [checked]="localStatuses.has(status)"
+>{{ CLIENT_STATUS_CONFIG[status].name}}</mat-checkbox>
+<br>
+<button mat-button color="accent" (click)="onRandomData()">Random Data</button>
+<bar-chart [chartConfig]="(barChartConfig$ | async)!"
+           [bars]="(bars$ | async)!"
+           (barClick)="onChooseStatus($event)">
   <ng-template #customTooltip let-bar$="bar$">
     <bar-tooltip [bar]="bar$ | async"></bar-tooltip>
   </ng-template>
@@ -6,7 +14,8 @@
 </bar-chart>
 
 <app-donut-chart
-  [donutChartConfig]="donutChartConfig$ | async"
+  [config]="(donutChartConfig$ | async)!"
+  [donuts]="(donuts$ | async)!"
   (sectionClick)='onChooseStatus($event)'>
   <ng-template #customTooltip let-donut$="donut$">
     <donut-tooltip [donut]="donut$ | async"></donut-tooltip>

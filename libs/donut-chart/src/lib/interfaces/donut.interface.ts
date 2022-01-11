@@ -4,5 +4,6 @@ export interface Donut {
   color: string;
   opacity: number;
   border: string;
+  selected: boolean;
 }
 

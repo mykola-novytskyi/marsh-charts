@@ -4,23 +4,25 @@ import {
   Component,
   ContentChild,
   ElementRef,
-  EventEmitter, Inject,
+  EventEmitter,
+  Inject,
   Input,
   OnChanges,
   OnDestroy,
   OnInit,
   Output,
-  SimpleChanges,
   TemplateRef,
   ViewChild
 } from '@angular/core';
 import { BehaviorSubject, fromEvent, Subject, takeUntil } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import * as d3 from 'd3';
+import { ScaleBand, ScaleLinear } from 'd3';
 import { Bar } from './interfaces/bar.interface';
 import { BarTooltip } from './interfaces/bar-tooltip.interface';
-import { Series } from './interfaces/series.interface';
 import { DOCUMENT } from '@angular/common';
+import { Selection } from 'd3-selection';
+import { BarConfig } from './interfaces/bar-config.interface';
 
 @Component({
   selector: 'bar-chart',
@@ -36,69 +38,55 @@ import { DOCUMENT } from '@angular/common';
 
     .bar-tooltip {
       position: absolute;
+      white-space: nowrap;
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterViewInit {
-  @Input() chartConfig: any; // TODO add additional input for data
+  @Input() chartConfig!: Partial<BarConfig>;
+  @Input() bars: Bar[] = [];
 
   @Output() barClick = new EventEmitter<number | string>();
-  @ContentChild('customTooltip') customTooltip: TemplateRef<unknown> | null  = null;
+  @ContentChild('customTooltip') customTooltip: TemplateRef<unknown> | null = null;
   @ViewChild('tooltip') tooltipRef!: ElementRef<HTMLElement>;
 
   hoveredBar$ = new BehaviorSubject<BarTooltip | null>(null);
 
-  defaultOptions = {
+  defaultOptions: BarConfig = {
     yAxisName: '',
     width: 1800,
     height: 400,
-    barWidth: 60,
-    gapBetweenBars: 20,
-    gapBetweenGroups: 56,
-    gapBetweenLegendAndColumns: 20,
     labelTopPadding: 15,
-    legendHeight: 20,
-    legendWidth: 20,
     countRectHeight: 20,
-    gapBetweenLegend: 20,
     gapBetweenColumnAndCount: 5,
-    tickYPercentage: 10,
-    isBarSelected: false,
-    colorCountRect: '#f2f2f2' //TODO
+    tickYPercentage: 10
   };
-  options: any;
-  private svg: any;
+  private options!: BarConfig;
+  private svg!: Selection<SVGSVGElement, unknown, null, undefined>;
   private chartContainer!: HTMLElement;
-  private columnLayer: any;
-  private axisXLayer: any;
-  private axisYLayer: any;
-  private countLayer: any;
-  private tooltip: any;
-  private columnsData!: Array<any>;
-  private xScale: any;
-  private xInScale: any;
-  private yScale: any;
+  private columnLayer!: Selection<SVGGElement, unknown, null, undefined>;
+  private axisXLayer!: Selection<SVGGElement, unknown, null, undefined>;
+  private axisYLayer!: Selection<SVGGElement, unknown, null, undefined>;
+  private countLayer!: Selection<SVGGElement, unknown, null, undefined>;
+  private tooltip!: Selection<HTMLElement, unknown, null, undefined>;
+  private xScale!: ScaleBand<string>;
+  private xInScale!: ScaleBand<string>;
+  private yScale!: ScaleLinear<number, number, never>;
   private columnLayerHeight!: number;
-  private transition: any; // transition
   private maxPercentage!: number;
-  private totalLegendHeight = 0; // get group height
-  private totalLabelHeight!: number; // get group height
+  private totalLabelHeight!: number;
   private unsubscribe = new Subject<void>();
   private marginLeft = 50;
   private window: Window;
+  private totalValue = 0;
+  private hasSelectedBar = false;
+  private transitionDuration = 500;
+  private transitionWithDelay: any;
+  private transition: any;
 
   constructor(private elementRef: ElementRef, @Inject(DOCUMENT) private document: Document) {
     this.window = this.document.defaultView!;
-  }
-
-  get groupsNumber() {
-    return this.options.labels.length;
-  }
-
-  get seriesNumber() {
-    // TODO need to remove series
-    return this.options.series.length;
   }
 
   ngOnInit() {
@@ -119,8 +107,8 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
   /**
    * Everythime the @Input is updated, we rebuild the chart
    **/
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['chartConfig'] && this.chartConfig && this.chartContainer) {
+  ngOnChanges(): void {
+    if (this.chartContainer) {
       this.populate();
     }
   }
@@ -137,9 +125,6 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
    * Will call all necessary method to draw/redraw d3 chart
    */
   populate() {
-    if (!this.chartConfig) {
-      return;
-    }
     this.setup();
     this.buildSVG();
     this.drawAxisX();
@@ -153,36 +138,17 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
    */
   buildDataSet() {
     let maxValue = 0;
-
-    // eslint-disable-next-line prefer-spread
-    this.columnsData = Array.apply(null, Array(this.groupsNumber)).map(function() {
-      return { data: [] };
+    this.totalValue = 0;
+    this.hasSelectedBar = false;
+    this.bars.forEach((bar: Bar) => {
+      if (bar.selected) {
+        this.hasSelectedBar = true;
+      }
+      this.totalValue += bar.value;
+      maxValue = maxValue < bar.value ? bar.value : maxValue;
     });
-    for (let i = 0; i < this.groupsNumber; i++) {
-      this.chartConfig.series.forEach((s: Series, index: number) => {
-        if (!i) {
-          this.chartConfig.series[index].total = 0;
-        }
-        if (this.columnsData[i].data.length < this.chartConfig.series.length) {
-          const value = s.data[i].value;
-          maxValue = maxValue < value ? value : maxValue;
-          // TODO remove all this logic
-          this.columnsData[i].data.push({
-            ser: index,
-            value: value,
-            color: s.data[i].color,
-            id: s.data[i].id,
-            opacity: s.data[i].opacity,
-            border: s.data[i].border
-          });
-
-          this.chartConfig.series[index].total += value;
-        }
-      });
-    }
-    this.maxPercentage = maxValue / Math.max(this.chartConfig.series.map((bar: Series) => bar.total)) * 100;
+    this.maxPercentage = (maxValue / this.totalValue) * 100;
   }
-
 
   /**
    * Basically we get the dom element size and build the container configs
@@ -190,7 +156,8 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
    **/
   private setup(): void {
     this.transition = d3.transition('transition').duration(500).ease(d3.easeLinear);
-    this.options = Object.assign({}, this.defaultOptions, this.chartConfig);
+    this.transitionWithDelay = d3.transition().delay(this.transitionDuration).ease(d3.easeLinear);
+    this.options = { ...this.defaultOptions, ...this.chartConfig };
     this.buildDataSet();
 
     const parentContainerRect = d3.select(this.elementRef.nativeElement).node().getBoundingClientRect();
@@ -201,16 +168,12 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
 
     this.xScale = d3
       .scaleBand()
-      .domain(this.options.labels)
-      .range([0, this.options.width])
+      .domain(this.bars.map((bar: Bar) => bar.label))
+      .range([0, this.options.width - this.marginLeft])
       .paddingInner(0.5)
       .paddingOuter(0.3);
 
-    this.xInScale = d3
-      .scaleBand()
-      .domain(d3.range(0, this.seriesNumber).map(d => d + ''))
-      .range([0, this.xScale.bandwidth()])
-      .paddingInner(0.2);
+    this.xInScale = d3.scaleBand().range([0, this.xScale.bandwidth()]).paddingInner(0.2);
   }
 
   /**
@@ -218,27 +181,26 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
    **/
   private buildSVG(): void {
     if (!this.svg) {
-      const svg = (this.svg = d3
+      this.svg = d3
         .select(this.chartContainer)
         .append('svg')
         .attr('width', this.options.width)
-        .attr('height', this.options.height));
-      const wrapper = svg.append('g').classed('wrapper', true)
-        .attr('transform', () => `translate(${this.marginLeft}, 0)`); // TODO this is temporary decision
+        .attr('height', this.options.height);
+      const wrapper = this.svg.append('g').classed('wrapper', true)
+        .attr('transform', () => `translate(${this.marginLeft}, 0)`);
       this.columnLayer = wrapper.append('g').classed('columns', true);
       this.axisXLayer = wrapper.append('g').classed('x-axis', true);
       this.axisYLayer = wrapper.append('g').classed('y-axis', true);
       this.countLayer = wrapper.append('g').classed('counts', true);
 
-      svg.append('text')
+      this.svg.append('text')
         .attr('class', 'y label')
         .attr('text-anchor', 'end')
         .attr('y', 6)
         .attr('dy', '.75em')
-        .attr('transform', `rotate(-90) translate(-150, 0)`)   // TODO this is hardcode - need to change to dynamic
+        .attr('transform', `rotate(-90) translate(-150, 0)`)
         .text(`${this.options.yAxisName}`);
     }
-
     this.svg.attr('width', this.options.width);
   }
 
@@ -249,13 +211,13 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
     if (isEnter) {
       this.axisXLayer.call(xAxis).attr('font-size', '12px').selectAll('line, path').style('stroke', '#bbbcbc');
     } else {
-      this.axisXLayer.attr('transform', () => `translate(0, ${this.columnLayerHeight})`).call(xAxis).transition(this.transition);
+      this.axisXLayer.transition(this.transition).attr('transform', () => `translate(-${this.xScale.bandwidth() * 0.1}, ${this.columnLayerHeight})`).call(xAxis);
     }
     this.totalLabelHeight = (this.axisXLayer.node() as any).getBBox().height;
-    this.columnLayerHeight = this.options.height - this.totalLabelHeight - this.totalLegendHeight;
+    this.columnLayerHeight = this.options.height - this.totalLabelHeight;
 
     if (isEnter) {
-      this.axisXLayer.attr('transform', () => `translate(0, ${this.columnLayerHeight})`);
+      this.axisXLayer.attr('transform', () => `translate(-${this.xScale.bandwidth() * 0.1}, ${this.columnLayerHeight})`);
     }
   }
 
@@ -266,115 +228,115 @@ export class BarChartComponent implements OnInit, OnDestroy, OnChanges, AfterVie
       .range([this.columnLayerHeight, this.options.gapBetweenColumnAndCount + this.options.countRectHeight])
     ;
 
-    //TODO change color of yAxis
     this.axisYLayer.call(
       d3.axisLeft(this.yScale)
         .ticks(Math.floor(this.maxPercentage / this.options.tickYPercentage))
         .tickFormat((d) => `${d}%`)
         .tickSize(0)
-    );
+    ).selectAll('line, path').style('stroke', '#bbbcbc');
   }
 
   private drawCount() {
-    const countGroup = this.countLayer.selectAll('.group-count').data(this.columnsData);
-    const o = this.options;
-    const t = this.transition;
-    const xScale = this.xScale;
-    const xInScale = this.xInScale;
-    const newCountGroup = countGroup.enter().append('g').classed('group-count', true);
-
-    countGroup.merge(newCountGroup).attr('transform', function(d: any, i: number) {
-      return 'translate(' + [xScale(o.labels[i]), 0] + ')';
-    });
-
-
-    const groups = countGroup.merge(newCountGroup);
-    const text = groups.selectAll('text').data((d: any) => d.data);
-    const newText = text.enter().append('text');
-
-    text.merge(newText).text((d: any) => (d.value));
-
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const context = this;
-    // @ts-ignore
-    const translateText = function(selection) {
-      selection.attr('transform', function(bar: Bar) {
-        // @ts-ignore
-        const textRect = (d3.select(this).node() as any).getBBox();
-        return `translate(${xInScale(`${bar.ser}`) + xInScale.bandwidth() * 0.5 - textRect.width * 0.5},
-             ${context.yScale(context.getPercentage(bar)) - o.gapBetweenColumnAndCount})`;
-      });
+    const self: BarChartComponent = this;
+    const transform = function(this: SVGTextElement, bar: Bar): string {
+      const textRect = (d3.select(this).node() as any).getBBox();
+      return `translate(${self.xScale(bar.label)! + self.xInScale.bandwidth() * 0.5 - textRect.width * 0.5},
+             ${self.yScale(self.getPercentage(bar)) - self.options.gapBetweenColumnAndCount})`;
     };
 
-    newText.call(translateText);
-    text.transition(t).call(translateText);
+    this.countLayer.selectAll<SVGTextElement, Bar>('text').data(this.bars, (bar: Bar) => bar.id)
+      .join((enter) =>
+          enter.append('text')
+            .style('opacity', 0)
+            .text(bar => bar.value)
+            .attr('transform', transform)
+            .call(enter => enter.transition(this.transitionWithDelay)
+              .style('opacity', 1)),
+
+        (update) =>
+          update
+            .call(update => update.transition(this.transition)
+              .attr('transform', transform)
+              .tween('text', function(bar: Bar) {
+                const textSelection = d3.select(this);
+                const start = +textSelection.text();
+                const interpolator = d3.interpolateNumber(start, bar.value);
+
+                return (t) => textSelection.text(Math.round(interpolator(t)));
+              })
+            )
+      );
   }
 
   private drawColumns() {
-    const o = this.options;
-    const height = this.columnLayerHeight;
-    const xScale = this.xScale;
-    const xInScale = this.xInScale;
-    const groupColumns = this.columnLayer.selectAll('.group-column').data(this.columnsData);
-    const t = this.transition;
     const self = this;
 
-    const newGroupColumns = groupColumns.enter().append('g').classed('group-column', true);
-
-    groupColumns.merge(newGroupColumns).attr('transform', function(d: any, i: number) {
-      return 'translate(' + [xScale(o.labels[i]), 0] + ')';
-    });
-
-    const columns = groupColumns.merge(newGroupColumns).selectAll('.column').data((d: any) => d.data);
-    const newColumns = columns
-      .enter()
-      .append('rect')
-      .attr('height', 0)
-      .attr('cursor', 'pointer')
-      .classed('column', true)
-      .attr('transform', (d: Bar) => `translate(${xInScale(`${d.ser}`)}, ${height})`)
-
-    columns
-      .merge(newColumns)
-      .style('opacity', (bar: Bar) => (bar.opacity))
-      .style('stroke', (bar: Bar) => bar.border)
+    this.columnLayer.selectAll<SVGRectElement, Bar>('rect')
+      .data(this.bars, (bar: Bar) => bar.id)
+      .interrupt('remove')
+      .join(enter => enter
+          .append('rect')
+          .attr('height', 0)
+          .attr('cursor', 'pointer')
+          .classed('column', true)
+          .attr('x', (bar: Bar) => this.xScale(bar.label)!)
+          .attr('width', this.xInScale.bandwidth())
+          .attr('height', () => this.columnLayerHeight - this.yScale(0))
+          .attr('y', () => this.yScale(0))
+        ,
+        update => update
+          .call(update => update.transition(this.transition)
+            .attr('x', (bar: Bar) => this.xScale(bar.label)!)
+            .attr('width', this.xInScale.bandwidth())
+          ),
+        exit =>
+          exit.call(exit => exit.transition('remove')
+            .duration(this.transitionDuration * 0.75)
+            .attr('height', () => this.columnLayerHeight - this.yScale(0))
+            .attr('y', () => this.yScale(0))
+            .on('end', function(this: SVGRectElement) {
+              d3.select(this).remove();
+            })
+          )
+      )
+      .style('opacity', (bar: Bar) => bar.opacity || 1)
+      .style('stroke', (bar: Bar) => bar.border || '')
       .style('stroke-width', (bar: Bar) => bar.border ? 2 : 0)
       .style('fill', (d: Bar) => d.color)
       .on('mouseover', function(this: SVGRectElement, event: MouseEvent, bar: Bar) {
         const thisRect = d3.select(this);
-        if (!self.options.isBarSelected) {
-          thisRect.style('fill', () => d3.rgb(thisRect.style('fill')).darker() as any);
+        if (!self.hasSelectedBar) {
+          thisRect.style('fill', () => d3.rgb(thisRect.style('fill')).darker(0.3) as any);
         }
         self.hoveredBar$.next({
           id: bar.id,
           value: bar.value,
-          total: self.getTotalBySeries(bar.ser as number),
+          total: self.totalValue,
           percentage: +self.getPercentage(bar).toFixed(1)
         });
       })
       .on('mouseout', function(this: SVGRectElement, event: MouseEvent, bar: Bar) {
         d3.select(this).style('fill', bar.color);
-        self.hoveredBar$.next(null)
+        self.hoveredBar$.next(null);
       })
       .on('mousemove', (event: MouseEvent) =>
         this.tooltip
-          .style('left', event.x + this.window.scrollX + 20 + 'px')
+          .style('left', () => {
+            const tooltipWidth = this.tooltip.node()!.getBoundingClientRect().width;
+            if (event.x + this.window.scrollX + 20 + tooltipWidth >
+              this.window.innerWidth) {
+              return event.x - tooltipWidth - 20 + this.window.scrollX + 'px'
+            }
+            return event.x + this.window.scrollX + 20 + 'px';
+          })
           .style('top', event.y + this.window.scrollY + 25 + 'px'))
-      .on('click', (event: MouseEvent, bar: Bar) => this.barClick.emit(bar.id));
-
-    columns
-      .merge(newColumns)
-      .transition(t)
-      .attr('width', xInScale.bandwidth())
-      .attr('height', (bar: Bar) => height - this.yScale(this.getPercentage(bar)))
-      .attr('transform', (bar: Bar) => `translate(${xInScale(`${bar.ser}`)}, ${this.yScale(this.getPercentage(bar))})`);
-  }
-
-  private getTotalBySeries(series: number): number {
-    return this.chartConfig.series[series].total;
+      .on('click', (event: MouseEvent, bar: Bar) => this.barClick.emit(bar.id))
+      .transition(this.transition)
+        .attr('y', (bar: Bar) => this.yScale(this.getPercentage(bar)))
+        .attr('height', (bar: Bar) => this.columnLayerHeight - this.yScale(this.getPercentage(bar)))
   }
 
   private getPercentage(bar: Bar): number {
-    return +(bar.value * 100 / this.getTotalBySeries(bar.ser as number));
+    return +(bar.value * 100 / this.totalValue);
   }
 }

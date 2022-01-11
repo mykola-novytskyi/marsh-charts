@@ -1,0 +1,219 @@
+@use '@angular/material' as mat;
+@include mat.core();
+
+$custom-light-palette-primary: (
+  100 : #d3cef8,
+  500 : #1c63ed,
+  700 : rgba(0, 0, 0, 0.04),
+  A100 : #ffffff,
+  A200 : #e9e7ff,
+  A400 : #b9b4ff,
+  A700 : #a29bff,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #000000,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #000000,
+  )
+);
+$custom-light-palette-accent: (
+  100 : #fafafa,
+  500 : #1c63ed,
+  700 : #eeeeee,
+  A100 : #ffecec,
+  A200 : #ffb9b9,
+  A400 : #ff8686,
+  A700 : #ff6d6d,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #ffffff,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #000000,
+  )
+);
+$custom-palette-warm: (
+  100 : #db2828,
+  500 : #db2828,
+  700 : #db2828,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #ffffff,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #000000,
+  )
+);
+$custom-light-background: (
+  50 : #ffffff,
+  contrast: (
+    50 : #000000,
+  )
+);
+
+// Define the light theme
+$light-primary: mat.define-palette($custom-light-palette-primary);
+$light-accent: mat.define-palette($custom-light-palette-accent);
+$light-warm: mat.define-palette($custom-palette-warm);
+$light-background-color: map_get($custom-light-background, 50);
+$light-theme: mat.define-light-theme($light-primary, $light-accent, $light-warm);
+
+// Insert custom light theme background color
+$light-background: map-get($light-theme, background);
+$light-background: map_merge($light-background, (background: $light-background-color));
+$light-theme: map_merge($light-theme, (background: $light-background));
+
+@include mat.all-component-themes($light-theme);
+
+$custom-dark-palette-primary: (
+  100 : #070707,
+  500 : #4d89ff,
+  700 : rgba(255, 255, 255, 0.04),
+  A100 : #ffffff,
+  A200 : #e9e7ff,
+  A400 : #b9b4ff,
+  A700 : #a29bff,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #000000,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #000000,
+  )
+);
+$custom-dark-palette-accent: (
+  100 : #111111,
+  500 : #4d89ff,
+  700 : #070707,
+  A100 : #ffecec,
+  A200 : #ffb9b9,
+  A400 : #ff8686,
+  A700 : #ff6d6d,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #ffffff,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #000000,
+  )
+);
+$custom-dark-background: (
+  50 : #1a1a1a,
+  contrast: (
+    50 : #000000,
+  )
+);
+
+$dark-primary: mat.define-palette($custom-dark-palette-primary);
+$dark-accent: mat.define-palette($custom-dark-palette-accent);
+$dark-warn: mat.define-palette($custom-palette-warm);
+$dark-background-color: map_get($custom-dark-background, 50);
+$dark-theme: mat.define-dark-theme($dark-primary, $dark-accent, $dark-warn);
+
+// Insert custom dark theme background color
+$dark-background: map-get($dark-theme, background);
+$dark-background: map_merge($dark-background, (background: $dark-background-color));
+$dark-background: map_merge($dark-background, (card: $dark-background-color));
+$dark-theme: map_merge($dark-theme, (background: $dark-background));
+
+.dark {
+  @include mat.all-component-themes($dark-theme);
+
+  $dark-foreground: map-get($dark-theme, foreground);
+  $dark-foreground: map_merge($dark-foreground, (secondary-text: #ffffff));
+  $dark-theme: map_merge($dark-theme, (foreground: $dark-foreground));
+
+  @include mat.table-theme($dark-theme);
+
+  $primary: mat.get-color-from-palette($dark-primary);
+  $primary-lighter: mat.get-color-from-palette($dark-primary, 'lighter');
+  $primary-darker: mat.get-color-from-palette($dark-primary, 'darker');
+
+  $accent: mat.get-color-from-palette($dark-accent);
+  $accent-lighter: mat.get-color-from-palette($dark-accent, 'lighter');
+  $accent-darker: mat.get-color-from-palette($dark-accent, 'darker');
+
+  $background-color: map_get($custom-dark-background, 50);
+
+  --light-blue: #{$primary};
+  --primary-lighter-color: #{$primary-lighter};
+  --primary-darker-color: #{$primary-darker};
+  --accent-color: #{$accent};
+  --gray-bg: #{$accent-darker};
+  --gray-hl: #{$accent-lighter};
+  --background-color: #{$background-color};
+}
+
+.lite {
+  @include mat.all-component-themes($light-theme);
+
+  $light-foreground: map-get($light-theme, foreground);
+  $light-foreground: map_merge($light-foreground, (secondary-text: rgba(0, 0, 0, 0.87)));
+  $light-theme: map_merge($light-theme, (foreground: $light-foreground));
+
+  @include mat.table-theme($light-theme);
+
+  $primary: mat.get-color-from-palette($light-primary);
+  $primary-lighter: mat.get-color-from-palette($light-primary, 'lighter');
+  $primary-darker: mat.get-color-from-palette($light-primary, 'darker');
+
+  $accent: mat.get-color-from-palette($light-accent);
+  $accent-lighter: mat.get-color-from-palette($light-accent, 'lighter');
+  $accent-darker: mat.get-color-from-palette($light-accent, 'darker');
+
+  $background-color: map_get($custom-light-background, 50);
+
+  --light-blue: #{$primary};
+  --primary-lighter-color: #{$primary-lighter};
+  --primary-darker-color: #{$primary-darker};
+  --accent-color: #{$accent};
+  --gray-bg: #{$accent-lighter};
+  --gray-hl: #{$accent-darker};
+  --background-color: #{$background-color};
+}

@@ -1,5 +1,6 @@
-import { DonutSection } from './donut-section.interface';
+import { PieArcDatum } from 'd3';
+import { Donut } from './donut.interface';
 
 export interface CustomPathElement extends SVGPathElement {
-  _current: DonutSection;
+  _current: PieArcDatum<Donut>;
 }

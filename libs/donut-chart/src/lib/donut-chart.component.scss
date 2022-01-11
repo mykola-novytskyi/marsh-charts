@@ -1,20 +1,13 @@
-:host::ng-deep.donut-chart {
-  &--inactive {
-    opacity: .7;
-  }
-  &__total-title {
+:host::ng-deep {
+  .donut-chart-total-title {
     font-size:13px;
     line-height: 1rem;
     text-anchor: middle;
   }
-  &__total-value {
+  .donut-chart-total-value {
     font-size: 14px;
     font-weight: bold;
     line-height: 2rem;
-    text-anchor: middle;
-  }
-
-  &__current-percentage {
     text-anchor: middle;
   }
 }
