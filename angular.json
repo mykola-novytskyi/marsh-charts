@@ -1,58 +1,6 @@
 {
   "version": 1,
   "projects": {
-    "api": {
-      "root": "apps/api",
-      "sourceRoot": "apps/api/src",
-      "projectType": "application",
-      "architect": {
-        "build": {
-          "builder": "@nrwl/node:build",
-          "outputs": ["{options.outputPath}"],
-          "options": {
-            "outputPath": "dist/apps/api",
-            "main": "apps/api/src/main.ts",
-            "tsConfig": "apps/api/tsconfig.app.json",
-            "assets": ["apps/api/src/assets"]
-          },
-          "configurations": {
-            "production": {
-              "optimization": true,
-              "extractLicenses": true,
-              "inspect": false,
-              "fileReplacements": [
-                {
-                  "replace": "apps/api/src/environments/environment.ts",
-                  "with": "apps/api/src/environments/environment.prod.ts"
-                }
-              ]
-            }
-          }
-        },
-        "serve": {
-          "builder": "@nrwl/node:execute",
-          "options": {
-            "buildTarget": "api:build"
-          }
-        },
-        "lint": {
-          "builder": "@nrwl/linter:eslint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": ["apps/api/**/*.ts"]
-          }
-        },
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "outputs": ["coverage/apps/api"],
-          "options": {
-            "jestConfig": "apps/api/jest.config.js",
-            "passWithNoTests": true
-          }
-        }
-      },
-      "tags": []
-    },
     "api-interfaces": {
       "root": "libs/api-interfaces",
       "sourceRoot": "libs/api-interfaces/src",
@@ -95,6 +43,72 @@
             "lintFilePatterns": [
               "libs/bar-chart/src/**/*.ts",
               "libs/bar-chart/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
+    "donut-chart": {
+      "projectType": "library",
+      "root": "libs/donut-chart",
+      "sourceRoot": "libs/donut-chart/src",
+      "prefix": "",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss",
+          "skipTests": true,
+          "changeDetection": "OnPush"
+        }
+      },
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/donut-chart"],
+          "options": {
+            "jestConfig": "libs/donut-chart/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/donut-chart/src/**/*.ts",
+              "libs/donut-chart/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
+    "map-chart": {
+      "projectType": "library",
+      "root": "libs/map-chart",
+      "sourceRoot": "libs/map-chart/src",
+      "prefix": "",
+      "schematics": {
+        "@nrwl/angular:component": {
+          "style": "scss",
+          "skipTests": true,
+          "changeDetection": "OnPush"
+        }
+      },
+      "architect": {
+        "test": {
+          "builder": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/map-chart"],
+          "options": {
+            "jestConfig": "libs/map-chart/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "builder": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/map-chart/src/**/*.ts",
+              "libs/map-chart/src/**/*.html"
             ]
           }
         }
@@ -232,72 +246,6 @@
       },
       "tags": [],
       "implicitDependencies": ["marsh-charts"]
-    },
-    "donut-chart": {
-      "projectType": "library",
-      "root": "libs/donut-chart",
-      "sourceRoot": "libs/donut-chart/src",
-      "prefix": "",
-      "schematics": {
-        "@nrwl/angular:component": {
-          "style": "scss",
-          "skipTests": true,
-          "changeDetection": "OnPush"
-        }
-      },
-      "architect": {
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/donut-chart"],
-          "options": {
-            "jestConfig": "libs/donut-chart/jest.config.js",
-            "passWithNoTests": true
-          }
-        },
-        "lint": {
-          "builder": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "libs/donut-chart/src/**/*.ts",
-              "libs/donut-chart/src/**/*.html"
-            ]
-          }
-        }
-      },
-      "tags": []
-    },
-    "map-chart": {
-      "projectType": "library",
-      "root": "libs/map-chart",
-      "sourceRoot": "libs/map-chart/src",
-      "prefix": "",
-      "schematics": {
-        "@nrwl/angular:component": {
-          "style": "scss",
-          "skipTests": true,
-          "changeDetection": "OnPush"
-        }
-      },
-      "architect": {
-        "test": {
-          "builder": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/map-chart"],
-          "options": {
-            "jestConfig": "libs/map-chart/jest.config.js",
-            "passWithNoTests": true
-          }
-        },
-        "lint": {
-          "builder": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "libs/map-chart/src/**/*.ts",
-              "libs/map-chart/src/**/*.html"
-            ]
-          }
-        }
-      },
-      "tags": []
     }
   }
 }
